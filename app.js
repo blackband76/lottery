@@ -1,7 +1,7 @@
 // ===== Supabase Setup =====
 const SUPABASE_URL = 'https://qdujrhcnlxyxnkfsvuno.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkdWpyaGNubHh5eG5rZnN2dW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTc5MjUsImV4cCI6MjA4NzM5MzkyNX0.M2scPe3eRfHSMjRDAFufNJewyeyZGhs_daMQ1ArZuIg';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ===== State =====
 let reservations = {}; // { "00": ["Name1", "Name2"], "07": ["Name3"], ... }
@@ -32,7 +32,7 @@ let selectedNumber = null;
 
 // ===== Load Reservations from Supabase =====
 async function loadReservations() {
-    const { data, error } = await supabase
+    const { data, error } = await db
         .from('reservations')
         .select('number, name')
         .order('created_at', { ascending: true });
@@ -140,7 +140,7 @@ async function reserveNumber() {
     btnConfirm.disabled = true;
     btnConfirm.textContent = 'Saving...';
 
-    const { error } = await supabase
+    const { error } = await db
         .from('reservations')
         .insert({ number: selectedNumber, name: name });
 
