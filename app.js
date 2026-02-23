@@ -8,8 +8,6 @@ let reservations = {}; // { "00": ["Name1", "Name2"], "07": ["Name3"], ... }
 
 // ===== DOM References =====
 const grid = document.getElementById('numberGrid');
-const availableCount = document.getElementById('availableCount');
-const reservedCount = document.getElementById('reservedCount');
 
 // Reserve modal
 const modalOverlay = document.getElementById('modalOverlay');
@@ -89,7 +87,7 @@ function buildGrid() {
         cell.addEventListener('click', () => handleCellClick(num));
         grid.appendChild(cell);
     }
-    updateStats();
+    applyHeatmap();
 }
 
 // ===== Cell Click Handler =====
@@ -166,14 +164,35 @@ async function reserveNumber() {
     setTimeout(() => cell.classList.remove('just-reserved'), 600);
 
     closeModal(modalOverlay);
-    updateStats();
+    applyHeatmap();
 }
 
-// ===== Stats =====
-function updateStats() {
-    const reserved = Object.keys(reservations).filter(k => reservations[k].length > 0).length;
-    reservedCount.textContent = reserved;
-    availableCount.textContent = 100 - reserved;
+// ===== Heatmap =====
+function applyHeatmap() {
+    // Find the max count across all numbers
+    const counts = Object.values(reservations).map(names => names.length);
+    const maxCount = Math.max(1, ...counts); // at least 1 to avoid division by zero
+
+    for (let i = 0; i < 100; i++) {
+        const num = String(i).padStart(2, '0');
+        const cell = document.getElementById(`cell-${num}`);
+        const count = reservations[num] ? reservations[num].length : 0;
+
+        if (count > 0) {
+            // Intensity: 0.2 (min) to 1.0 (max) based on relative count
+            const intensity = 0.2 + (count / maxCount) * 0.8;
+            const hue = 140; // green
+            const saturation = 70;
+            const lightness = Math.round(25 + (1 - intensity) * 20); // darker green = more people
+            cell.style.background = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            cell.style.borderColor = `hsla(${hue}, ${saturation}%, ${lightness + 15}%, 0.6)`;
+            cell.querySelector('.cell-number').style.color = '#fff';
+        } else {
+            cell.style.background = '';
+            cell.style.borderColor = '';
+            cell.querySelector('.cell-number').style.color = '';
+        }
+    }
 }
 
 // ===== Modal Helpers =====
