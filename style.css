@@ -135,7 +135,7 @@ body {
     border-radius: 8px;
 }
 
-.instruction-list li:last-child {
+.instruction-list li.warning {
     background: rgba(255, 200, 50, 0.08);
     border: 1px solid rgba(255, 200, 50, 0.15);
     color: #ffd866;
