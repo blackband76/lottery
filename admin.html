@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lottery Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .admin-title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6c63ff, #e863ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .admin-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 36px;
+        }
+
+        .admin-card {
+            background: var(--bg-secondary);
+            border: 1px solid rgba(108, 99, 255, 0.15);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            margin-bottom: 20px;
+        }
+
+        .admin-card h2 {
+            font-family: var(--font-display);
+            font-size: 1.15rem;
+            margin-bottom: 8px;
+        }
+
+        .admin-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+
+        .admin-btn {
+            display: block;
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: var(--radius);
+            font-family: var(--font-main);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, var(--accent), var(--accent-bright));
+            color: white;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #ff4757, #ff6b7a);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.25);
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.35);
+        }
+
+        .admin-status {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: var(--success);
+            min-height: 24px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        .stat-box {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 16px 28px;
+            text-align: center;
+        }
+
+        .stat-box .num {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .stat-box .label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-top: 4px;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 28px;
+            color: var(--accent-bright);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-container">
+        <h1 class="admin-title">🔧 Admin Panel</h1>
+        <p class="admin-subtitle">Manage lottery reservations</p>
+
+        <div class="stat-row">
+            <div class="stat-box">
+                <div class="num" id="reservedCount">-</div>
+                <div class="label">Reserved</div>
+            </div>
+            <div class="stat-box">
+                <div class="num" id="availableCount">-</div>
+                <div class="label">Available</div>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <h2>📥 Export Reservations</h2>
+            <p>Download all current reservations as a CSV file.</p>
+            <button class="admin-btn btn-export" id="btnExport">Export to CSV</button>
+            <div class="admin-status" id="exportStatus"></div>
+        </div>
+
+        <div class="admin-card">
+            <h2>🗑️ Reset All Reservations</h2>
+            <p>Delete all reservations and start fresh. This action cannot be undone.</p>
+            <button class="admin-btn btn-reset" id="btnReset">Reset All</button>
+            <div class="admin-status" id="resetStatus"></div>
+        </div>
+
+        <a href="/" class="back-link">← Back to Lottery</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://qdujrhcnlxyxnkfsvuno.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkdWpyaGNubHh5eG5rZnN2dW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTc5MjUsImV4cCI6MjA4NzM5MzkyNX0.M2scPe3eRfHSMjRDAFufNJewyeyZGhs_daMQ1ArZuIg';
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const reservedCount = document.getElementById('reservedCount');
+        const availableCount = document.getElementById('availableCount');
+        const btnExport = document.getElementById('btnExport');
+        const btnReset = document.getElementById('btnReset');
+        const exportStatus = document.getElementById('exportStatus');
+        const resetStatus = document.getElementById('resetStatus');
+
+        // Load stats
+        async function loadStats() {
+            const { data, error } = await db.from('reservations').select('number, name').order('number');
+            if (error) {
+                console.error(error);
+                return [];
+            }
+            const count = data.length;
+            reservedCount.textContent = count;
+            availableCount.textContent = 100 - count;
+            return data;
+        }
+
+        // Export CSV
+        btnExport.addEventListener('click', async () => {
+            btnExport.disabled = true;
+            btnExport.textContent = 'Exporting...';
+            exportStatus.textContent = '';
+
+            const data = await loadStats();
+            if (data.length === 0) {
+                exportStatus.textContent = 'No reservations to export.';
+                exportStatus.style.color = 'var(--text-secondary)';
+                btnExport.disabled = false;
+                btnExport.textContent = 'Export to CSV';
+                return;
+            }
+
+            // Build CSV
+            let csv = '\uFEFF'; // UTF-8 BOM for Thai characters
+            csv += 'Number,Name\n';
+            data.forEach(row => {
+                csv += `${row.number},"${row.name}"\n`;
+            });
+
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `lottery_reservations_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            exportStatus.textContent = `✅ Exported ${data.length} reservations`;
+            exportStatus.style.color = 'var(--success)';
+            btnExport.disabled = false;
+            btnExport.textContent = 'Export to CSV';
+        });
+
+        // Reset
+        btnReset.addEventListener('click', async () => {
+            const confirmed = confirm('⚠️ Are you sure you want to delete ALL reservations? This cannot be undone!');
+            if (!confirmed) return;
+
+            const doubleConfirm = confirm('This will permanently delete all data. Are you REALLY sure?');
+            if (!doubleConfirm) return;
+
+            btnReset.disabled = true;
+            btnReset.textContent = 'Resetting...';
+            resetStatus.textContent = '';
+
+            const { error } = await db.from('reservations').delete().neq('id', 0);
+
+            if (error) {
+                resetStatus.textContent = '❌ Failed to reset. Check RLS policies.';
+                resetStatus.style.color = 'var(--danger)';
+                console.error(error);
+            } else {
+                resetStatus.textContent = '✅ All reservations have been cleared!';
+                resetStatus.style.color = 'var(--success)';
+                loadStats();
+            }
+
+            btnReset.disabled = false;
+            btnReset.textContent = 'Reset All';
+        });
+
+        // Init
+        loadStats();
+    </script>
+</body>
+
+</html>

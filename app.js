@@ -231,6 +231,28 @@ document.addEventListener('keydown', (e) => {
 async function init() {
     reservations = await loadReservations();
     buildGrid();
+
+    // Subscribe to realtime changes
+    db.channel('reservations-channel')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reservations' }, (payload) => {
+            const { number, name } = payload.new;
+            if (!reservations[number]) {
+                reservations[number] = name;
+                const cell = document.getElementById(`cell-${number}`);
+                if (cell) {
+                    cell.classList.add('reserved', 'just-reserved');
+                    cell.querySelector('.cell-name').textContent = name;
+                    setTimeout(() => cell.classList.remove('just-reserved'), 600);
+                    applyHeatmap();
+                }
+            }
+        })
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'reservations' }, async () => {
+            // On delete (admin reset), reload everything
+            reservations = await loadReservations();
+            buildGrid();
+        })
+        .subscribe();
 }
 
 init();
