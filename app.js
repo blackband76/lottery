@@ -4,7 +4,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ===== State =====
-let reservations = {}; // { "00": ["Name1", "Name2"], "07": ["Name3"], ... }
+let reservations = {}; // { "00": "Name1", "07": "Name2", ... }
 
 // ===== DOM References =====
 const grid = document.getElementById('numberGrid');
@@ -23,7 +23,6 @@ const infoModalOverlay = document.getElementById('infoModalOverlay');
 const infoModalNumber = document.getElementById('infoModalNumber');
 const infoModalNames = document.getElementById('infoModalNames');
 const btnInfoClose = document.getElementById('btnInfoClose');
-const btnAddMore = document.getElementById('btnAddMore');
 const infoModalClose = document.getElementById('infoModalClose');
 
 let selectedNumber = null;
@@ -40,22 +39,15 @@ async function loadReservations() {
         return {};
     }
 
-    // Group by number
-    const grouped = {};
+    // Map by number (single name per number)
+    const mapped = {};
     data.forEach(row => {
-        if (!grouped[row.number]) {
-            grouped[row.number] = [];
-        }
-        grouped[row.number].push(row.name);
+        mapped[row.number] = row.name;
     });
-    return grouped;
+    return mapped;
 }
 
-// ===== Format Cell Name =====
-function formatCellName(names) {
-    if (names.length === 1) return names[0];
-    return `${names[0]}, ${names.length - 1}+`;
-}
+
 
 // ===== Build Grid =====
 function buildGrid() {
@@ -79,9 +71,9 @@ function buildGrid() {
         cell.appendChild(nameEl);
 
         // Apply reserved state if exists
-        if (reservations[num] && reservations[num].length > 0) {
+        if (reservations[num]) {
             cell.classList.add('reserved');
-            nameEl.textContent = formatCellName(reservations[num]);
+            nameEl.textContent = reservations[num];
         }
 
         cell.addEventListener('click', () => handleCellClick(num));
@@ -93,10 +85,10 @@ function buildGrid() {
 // ===== Cell Click Handler =====
 function handleCellClick(num) {
     selectedNumber = num;
-    if (reservations[num] && reservations[num].length > 0) {
-        // Show info modal with all names
+    if (reservations[num]) {
+        // Show info modal
         infoModalNumber.textContent = num;
-        renderNamesList(reservations[num]);
+        infoModalNames.textContent = reservations[num];
         openModal(infoModalOverlay);
     } else {
         // Show reserve modal
@@ -114,16 +106,7 @@ function openReserveModal(num) {
     setTimeout(() => nameInput.focus(), 300);
 }
 
-// ===== Render Names List =====
-function renderNamesList(names) {
-    infoModalNames.innerHTML = '';
-    names.forEach((name) => {
-        const tag = document.createElement('span');
-        tag.className = 'name-tag';
-        tag.textContent = name;
-        infoModalNames.appendChild(tag);
-    });
-}
+
 
 // ===== Reserve =====
 async function reserveNumber() {
@@ -152,14 +135,11 @@ async function reserveNumber() {
     }
 
     // Update local state
-    if (!reservations[selectedNumber]) {
-        reservations[selectedNumber] = [];
-    }
-    reservations[selectedNumber].push(name);
+    reservations[selectedNumber] = name;
 
     const cell = document.getElementById(`cell-${selectedNumber}`);
     cell.classList.add('reserved', 'just-reserved');
-    cell.querySelector('.cell-name').textContent = formatCellName(reservations[selectedNumber]);
+    cell.querySelector('.cell-name').textContent = name;
 
     setTimeout(() => cell.classList.remove('just-reserved'), 600);
 
@@ -176,7 +156,7 @@ function applyHeatmap() {
     for (let i = 0; i < 100; i++) {
         const num = String(i).padStart(2, '0');
         const cell = document.getElementById(`cell-${num}`);
-        const count = reservations[num] ? reservations[num].length : 0;
+        const count = reservations[num] ? 1 : 0;
 
         if (count > 0) {
             // Intensity: 0.2 (min) to 1.0 (max) based on relative count
@@ -215,12 +195,7 @@ modalClose.addEventListener('click', () => closeModal(modalOverlay));
 btnInfoClose.addEventListener('click', () => closeModal(infoModalOverlay));
 infoModalClose.addEventListener('click', () => closeModal(infoModalOverlay));
 
-// "Add My Name" from the info modal
-btnAddMore.addEventListener('click', () => {
-    const num = selectedNumber;
-    closeModal(infoModalOverlay);
-    setTimeout(() => openReserveModal(num), 200);
-});
+
 
 // Close modals on overlay click
 modalOverlay.addEventListener('click', (e) => {
