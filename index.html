@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lottery Number Reservation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-glow"></div>
+            <h1 class="title">🎰 Lottery Reservation</h1>
+            <p class="subtitle">Pick your lucky number! Click any available number to reserve it.</p>
+            <div class="stats">
+                <div class="stat-card">
+                    <span class="stat-number" id="availableCount">100</span>
+                    <span class="stat-label">Available</span>
+                </div>
+                <div class="stat-card reserved-stat">
+                    <span class="stat-number" id="reservedCount">0</span>
+                    <span class="stat-label">Reserved</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Number Grid -->
+        <main class="grid-container">
+            <div class="number-grid" id="numberGrid"></div>
+        </main>
+
+        <!-- Legend -->
+        <footer class="legend">
+            <div class="legend-item">
+                <span class="legend-dot available"></span>
+                <span>Available</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot reserved"></span>
+                <span>Reserved</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <h2>Reserve Number</h2>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-number" id="modalNumber">00</div>
+                <p class="modal-prompt">Enter your name to reserve this number</p>
+                <input type="text" class="modal-input" id="nameInput" placeholder="Your name..." autocomplete="off"
+                    maxlength="30">
+                <div class="modal-error" id="modalError"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" id="btnCancel">Cancel</button>
+                <button class="btn btn-confirm" id="btnConfirm">Reserve</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Modal (for viewing reserved number) -->
+    <div class="modal-overlay" id="infoModalOverlay">
+        <div class="modal info-modal" id="infoModal">
+            <div class="modal-header">
+                <h2>Number Reserved</h2>
+                <button class="modal-close" id="infoModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-number reserved-number" id="infoModalNumber">00</div>
+                <p class="modal-reserved-by">Reserved by</p>
+                <div class="modal-names-list" id="infoModalNames"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-confirm" id="btnAddMore">Add My Name</button>
+                <button class="btn btn-cancel" id="btnInfoClose">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
