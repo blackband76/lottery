@@ -92,11 +92,32 @@
             box-shadow: 0 6px 20px rgba(255, 71, 87, 0.35);
         }
 
+        .btn-open {
+            background: linear-gradient(135deg, #51cf66, #40c057);
+            color: white;
+            box-shadow: 0 4px 15px rgba(81, 207, 102, 0.25);
+        }
+
+        .btn-open:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(81, 207, 102, 0.35);
+        }
+
+        .btn-close {
+            background: linear-gradient(135deg, #ffa726, #ff9800);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.25);
+        }
+
+        .btn-close:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.35);
+        }
+
         .admin-status {
             text-align: center;
             margin-top: 12px;
             font-size: 0.9rem;
-            color: var(--success);
             min-height: 24px;
         }
 
@@ -140,11 +161,114 @@
         .back-link:hover {
             text-decoration: underline;
         }
+
+        /* Login gate */
+        .login-gate {
+            max-width: 380px;
+            margin: 120px auto;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .login-gate h1 {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .login-gate p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 14px 18px;
+            background: var(--bg-secondary);
+            border: 2px solid rgba(108, 99, 255, 0.2);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+            text-align: center;
+            letter-spacing: 4px;
+            margin-bottom: 14px;
+        }
+
+        .login-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.15);
+        }
+
+        .login-error {
+            color: var(--danger);
+            font-size: 0.85rem;
+            min-height: 20px;
+            margin-bottom: 8px;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-bright));
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-family: var(--font-main);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .login-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+
+        .status-open {
+            background: rgba(81, 207, 102, 0.15);
+            color: #51cf66;
+            border: 1px solid rgba(81, 207, 102, 0.3);
+        }
+
+        .status-closed {
+            background: rgba(255, 152, 0, 0.15);
+            color: #ffa726;
+            border: 1px solid rgba(255, 152, 0, 0.3);
+        }
     </style>
 </head>
 
 <body>
-    <div class="admin-container">
+
+    <!-- Login Gate -->
+    <div id="loginGate" class="login-gate">
+        <h1>🔒 Admin Access</h1>
+        <p>Enter the admin password to continue</p>
+        <input type="password" class="login-input" id="passwordInput" placeholder="••••••••" autocomplete="off">
+        <div class="login-error" id="loginError"></div>
+        <button class="login-btn" id="btnLogin">Enter</button>
+    </div>
+
+    <!-- Admin Panel (hidden until authenticated) -->
+    <div id="adminPanel" class="admin-container hidden">
         <h1 class="admin-title">🔧 Admin Panel</h1>
         <p class="admin-subtitle">Manage lottery reservations</p>
 
@@ -157,6 +281,16 @@
                 <div class="num" id="availableCount">-</div>
                 <div class="label">Available</div>
             </div>
+        </div>
+
+        <div class="admin-card">
+            <h2>🔐 Reservation Status</h2>
+            <p>Control whether users can make new reservations.</p>
+            <div style="text-align:center;">
+                <span class="status-badge" id="statusBadge">Loading...</span>
+            </div>
+            <button class="admin-btn" id="btnToggle">Loading...</button>
+            <div class="admin-status" id="toggleStatus"></div>
         </div>
 
         <div class="admin-card">
@@ -178,31 +312,127 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+        const ADMIN_PASSWORD = '20071992';
         const SUPABASE_URL = 'https://qdujrhcnlxyxnkfsvuno.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkdWpyaGNubHh5eG5rZnN2dW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTc5MjUsImV4cCI6MjA4NzM5MzkyNX0.M2scPe3eRfHSMjRDAFufNJewyeyZGhs_daMQ1ArZuIg';
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // DOM
+        const loginGate = document.getElementById('loginGate');
+        const adminPanel = document.getElementById('adminPanel');
+        const passwordInput = document.getElementById('passwordInput');
+        const btnLogin = document.getElementById('btnLogin');
+        const loginError = document.getElementById('loginError');
+
         const reservedCount = document.getElementById('reservedCount');
         const availableCount = document.getElementById('availableCount');
+        const btnToggle = document.getElementById('btnToggle');
+        const statusBadge = document.getElementById('statusBadge');
+        const toggleStatus = document.getElementById('toggleStatus');
         const btnExport = document.getElementById('btnExport');
         const btnReset = document.getElementById('btnReset');
         const exportStatus = document.getElementById('exportStatus');
         const resetStatus = document.getElementById('resetStatus');
 
-        // Load stats
+        let isOpen = true;
+
+        // ===== Login =====
+        function attemptLogin() {
+            const pw = passwordInput.value.trim();
+            if (pw === ADMIN_PASSWORD) {
+                loginGate.classList.add('hidden');
+                adminPanel.classList.remove('hidden');
+                sessionStorage.setItem('admin_auth', 'true');
+                initAdmin();
+            } else {
+                loginError.textContent = '❌ Incorrect password';
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        }
+
+        btnLogin.addEventListener('click', attemptLogin);
+        passwordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') attemptLogin();
+            loginError.textContent = '';
+        });
+
+        // Check if already logged in this session
+        if (sessionStorage.getItem('admin_auth') === 'true') {
+            loginGate.classList.add('hidden');
+            adminPanel.classList.remove('hidden');
+            initAdmin();
+        } else {
+            setTimeout(() => passwordInput.focus(), 300);
+        }
+
+        // ===== Admin Init =====
+        function initAdmin() {
+            loadStats();
+            loadReservationStatus();
+        }
+
+        // ===== Load Stats =====
         async function loadStats() {
             const { data, error } = await db.from('reservations').select('number, name').order('number');
-            if (error) {
-                console.error(error);
-                return [];
-            }
-            const count = data.length;
-            reservedCount.textContent = count;
-            availableCount.textContent = 100 - count;
+            if (error) { console.error(error); return []; }
+            reservedCount.textContent = data.length;
+            availableCount.textContent = 100 - data.length;
             return data;
         }
 
-        // Export CSV
+        // ===== Reservation Status =====
+        async function loadReservationStatus() {
+            const { data, error } = await db.from('settings').select('value').eq('key', 'reservation_open').single();
+            if (error) {
+                console.error('Settings error:', error);
+                // Default to open if settings table doesn't exist yet
+                isOpen = true;
+            } else {
+                isOpen = data.value === 'true';
+            }
+            updateToggleUI();
+        }
+
+        function updateToggleUI() {
+            if (isOpen) {
+                statusBadge.textContent = '🟢 OPEN';
+                statusBadge.className = 'status-badge status-open';
+                btnToggle.textContent = '🔒 Close Reservations';
+                btnToggle.className = 'admin-btn btn-close';
+            } else {
+                statusBadge.textContent = '🔴 CLOSED';
+                statusBadge.className = 'status-badge status-closed';
+                btnToggle.textContent = '🔓 Open Reservations';
+                btnToggle.className = 'admin-btn btn-open';
+            }
+        }
+
+        btnToggle.addEventListener('click', async () => {
+            const newValue = !isOpen;
+            btnToggle.disabled = true;
+            toggleStatus.textContent = '';
+
+            const { error } = await db.from('settings')
+                .update({ value: String(newValue) })
+                .eq('key', 'reservation_open');
+
+            if (error) {
+                toggleStatus.textContent = '❌ Failed to update. Check settings table.';
+                toggleStatus.style.color = 'var(--danger)';
+                console.error(error);
+            } else {
+                isOpen = newValue;
+                updateToggleUI();
+                toggleStatus.textContent = isOpen
+                    ? '✅ Reservations are now OPEN'
+                    : '✅ Reservations are now CLOSED';
+                toggleStatus.style.color = 'var(--success)';
+            }
+            btnToggle.disabled = false;
+        });
+
+        // ===== Export =====
         btnExport.addEventListener('click', async () => {
             btnExport.disabled = true;
             btnExport.textContent = 'Exporting...';
@@ -217,14 +447,10 @@
                 return;
             }
 
-            // Build CSV
-            let csv = '\uFEFF'; // UTF-8 BOM for Thai characters
+            let csv = '\uFEFF';
             csv += 'Number,Name\n';
-            data.forEach(row => {
-                csv += `${row.number},"${row.name}"\n`;
-            });
+            data.forEach(row => { csv += `${row.number},"${row.name}"\n`; });
 
-            // Download
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -239,13 +465,10 @@
             btnExport.textContent = 'Export to CSV';
         });
 
-        // Reset
+        // ===== Reset =====
         btnReset.addEventListener('click', async () => {
-            const confirmed = confirm('⚠️ Are you sure you want to delete ALL reservations? This cannot be undone!');
-            if (!confirmed) return;
-
-            const doubleConfirm = confirm('This will permanently delete all data. Are you REALLY sure?');
-            if (!doubleConfirm) return;
+            if (!confirm('⚠️ Are you sure you want to delete ALL reservations?')) return;
+            if (!confirm('This will permanently delete all data. Are you REALLY sure?')) return;
 
             btnReset.disabled = true;
             btnReset.textContent = 'Resetting...';
@@ -254,21 +477,17 @@
             const { error } = await db.from('reservations').delete().neq('id', 0);
 
             if (error) {
-                resetStatus.textContent = '❌ Failed to reset. Check RLS policies.';
+                resetStatus.textContent = '❌ Failed to reset.';
                 resetStatus.style.color = 'var(--danger)';
                 console.error(error);
             } else {
-                resetStatus.textContent = '✅ All reservations have been cleared!';
+                resetStatus.textContent = '✅ All reservations cleared!';
                 resetStatus.style.color = 'var(--success)';
                 loadStats();
             }
-
             btnReset.disabled = false;
             btnReset.textContent = 'Reset All';
         });
-
-        // Init
-        loadStats();
     </script>
 </body>
 

@@ -5,6 +5,7 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ===== State =====
 let reservations = {}; // { "00": "Name1", "07": "Name2", ... }
+let reservationOpen = true;
 
 // ===== DOM References =====
 const grid = document.getElementById('numberGrid');
@@ -90,6 +91,8 @@ function handleCellClick(num) {
         infoModalNumber.textContent = num;
         infoModalNames.textContent = reservations[num];
         openModal(infoModalOverlay);
+    } else if (!reservationOpen) {
+        alert('❌ ขณะนี้ปิดรับการจองแล้ว');
     } else {
         // Show reserve modal
         openReserveModal(num);
@@ -227,9 +230,18 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// ===== Load Reservation Status =====
+async function loadReservationStatus() {
+    const { data, error } = await db.from('settings').select('value').eq('key', 'reservation_open').single();
+    if (!error && data) {
+        reservationOpen = data.value === 'true';
+    }
+}
+
 // ===== Init =====
 async function init() {
     reservations = await loadReservations();
+    await loadReservationStatus();
     buildGrid();
 
     // Subscribe to realtime changes
@@ -248,9 +260,17 @@ async function init() {
             }
         })
         .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'reservations' }, async () => {
-            // On delete (admin reset), reload everything
             reservations = await loadReservations();
             buildGrid();
+        })
+        .subscribe();
+
+    // Subscribe to settings changes (open/close)
+    db.channel('settings-channel')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'settings' }, (payload) => {
+            if (payload.new.key === 'reservation_open') {
+                reservationOpen = payload.new.value === 'true';
+            }
         })
         .subscribe();
 }
