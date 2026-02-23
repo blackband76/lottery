@@ -129,8 +129,16 @@ async function reserveNumber() {
     btnConfirm.textContent = 'Reserve';
 
     if (error) {
-        modalError.textContent = 'Failed to save. Please try again.';
-        console.error('Error reserving:', error);
+        // Unique constraint violation = someone else reserved it first
+        if (error.code === '23505') {
+            modalError.textContent = '❌ หมายเลขนี้ถูกจองแล้ว กรุณาเลือกหมายเลขอื่น';
+            // Refresh reservations to update the grid
+            reservations = await loadReservations();
+            buildGrid();
+        } else {
+            modalError.textContent = 'Failed to save. Please try again.';
+            console.error('Error reserving:', error);
+        }
         return;
     }
 
