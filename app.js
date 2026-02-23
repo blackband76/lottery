@@ -124,6 +124,15 @@ async function reserveNumber() {
     btnConfirm.disabled = true;
     btnConfirm.textContent = 'Saving...';
 
+    // Double-check reservation status from server before inserting
+    await loadReservationStatus();
+    if (!reservationOpen) {
+        btnConfirm.disabled = false;
+        btnConfirm.textContent = 'Reserve';
+        modalError.textContent = '❌ ขณะนี้ปิดรับการจองแล้ว';
+        return;
+    }
+
     const { error } = await db
         .from('reservations')
         .insert({ number: selectedNumber, name: name });
