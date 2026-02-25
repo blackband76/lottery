@@ -472,6 +472,15 @@ body {
     box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
 }
 
+/* ===== Footer ===== */
+.footer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 20px 0;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 600px) {
     .app {
